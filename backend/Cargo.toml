@@ -1,0 +1,9 @@
+[package]
+name = "turreta-alerts-backend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = "0.4.11"
+diesel = { version = "2.0.0", features = ["postgres"] }
+dotenvy = "0.15"
