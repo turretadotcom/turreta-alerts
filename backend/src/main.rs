@@ -1,6 +1,6 @@
 use dotenvy::dotenv;
-use actix_web::{get, web, App, HttpServer, Result, Responder};
-use serde::Deserialize;
+use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse};
+use serde::{Deserialize, Serialize};
 use std::env;
 // use turreta_rust_keycloak::abra::keycloak::KeycloakClientContext;
 
@@ -20,14 +20,25 @@ struct CreateAlertRequest {
     updated_at: String
 }
 
+#[derive(Serialize, Debug)]
+pub struct CreateAlertResponse {
+    pub status: String,
+}
 
-// #[post("/alerts", format = "json", data="<request>")]
-// fn create_alert(request: Json<CreateAlertRequest>) -> &'static str {
-//     "Create alert"
-// }
-//
+
+
+#[post("/alerts")]
+async fn create_alert(request_payload: web::Json<CreateAlertRequest>) -> impl Responder {
+
+    let response = &CreateAlertResponse {
+        status: "Create alert".to_string(),
+    };
+
+    HttpResponse::Ok().json(response)
+}
+
 // #[get("/alerts")]
-// fn get_recent_alert() -> &'static str {
+// async fn get_recent_alert() -> &'static str {
 //     "get recent alerts via default date range"
 // }
 
@@ -113,7 +124,7 @@ struct TokenCheckerMiddleware {}
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
-        App::new().service(get_alert)
+        App::new().service(create_alert)
     })
         .bind(("127.0.0.1", 8081))?
         .run()
