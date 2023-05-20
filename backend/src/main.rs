@@ -1,7 +1,7 @@
 mod controllers;
+mod repository;
+mod models;
 
-use indradb;
-use dotenvy::{dotenv};
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -19,140 +19,45 @@ use actix_web::{
 use actix_web::cookie::Key;
 use turreta_rust_keycloak::abra;
 use turreta_rust_keycloak::abra::keycloak_commons::KeycloakOpenIdConnectClientContext;
+use crate::controllers::alerts_controller::{config, create_alert};
 
-// use turreta_rust_keycloak::abra::keycloak::KeycloakClientContext;
-
-
-
-
-
-
-
-// #[get("/alerts")]
-// async fn get_recent_alert() -> &'static str {
-//     "get recent alerts via default date range"
-// }
-
-
-#[derive(Default)]
-struct TokenCheckerMiddleware {}
-//
-// #[rocket::async_trait]
-// impl Fairing for TokenCheckerMiddleware {
-//     fn info(&self) -> Info {
-//         Info {
-//             name: "GET/POST Counter",
-//             kind: Kind::Request | Kind::Response
-//         }
-//     }
-//     async fn on_request(&self, _req: &mut Request<'_>, _: &mut Data<'_>) {
-//         let t = _req.headers().get_one("Authorization");
-//
-//         // println!("{}", env!("KEYCLOAK_CLIENT_ID"));
-//         // println!("{}", env!("KEYCLOAK_CLIENT_SECRET"));
-//
-//         for (key, value) in env::vars() {
-//             println!("{key}: {value}");
-//         }
-//
-//         match t {
-//             Some(token) => {
-//                 println!("{}", token);
-//             }
-//             None => {
-//                 println!("None");
-//
-//             }
-//         }
-//     }
-// }
-
-
-pub struct KeycloakTransformFactory;
-
-impl KeycloakTransformFactory {
-    pub fn new() -> Self {
-        KeycloakTransformFactory {
-            // auth_data: Rc::new(auth_data),
-        }
-    }
-}
-
-impl<S, B> Transform<S, ServiceRequest> for KeycloakTransformFactory
-    where
-        S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-        S::Future: 'static,
-        B: 'static,
-{
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Transform = KeycloakMiddleware<S>;
-    type InitError = ();
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(KeycloakMiddleware { service }))
-    }
+#[get("/health")]
+async fn healthcheck() -> impl Responder {
+    let response = Response {
+        message: "Everything is working fine".to_string(),
+    };
+    HttpResponse::Ok().json(response)
 }
 
 
-pub struct KeycloakMiddleware<S> {
-    service: S,
+
+
+#[derive(Serialize)]
+pub struct Response {
+    pub message: String,
 }
-
-impl<S, B> Service<ServiceRequest> for KeycloakMiddleware<S>
-    where
-        S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-        S::Future: 'static,
-        B: 'static,
-{
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    forward_ready!(service);
-
-    fn call(&self, req: ServiceRequest) -> Self::Future {
-        println!("Hi from start. You requested: {}", req.path());
-
-        let fut = self.service.call(req);
-
-
-        KeycloakOpenIdConnectClientContext::new(String::from("my-realm"),
-                                                String::from("kc-16.1.1"),
-                                                String::from("kc-16.1.1-client-confidential"));
-        let auth_token = abra::keycloak_openid_service::KeycloakOpenIdConnectService::authenticate(
-            "http://localhost:8280/auth/",
-            "kc-16.1.1-user-1",
-            "password123",
-            &context);
-
-        let result = auth_token.await;
-
-        Box::pin(async move {
-            let res = fut.await?;
-
-            println!("Hi from response");
-            Ok(res)
-        })
-    }
+async fn not_found() -> Result<HttpResponse> {
+    let response = Response {
+        message: "Resource not found".to_string(),
+    };
+    Ok(HttpResponse::NotFound().json(response))
 }
 
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
 
+    let alerts_db = repository::database::Database::new();
+    let app_data = web::Data::new(alerts_db);
 
-    HttpServer::new(|| {
+
+    HttpServer::new(move ||
         App::new()
-            .wrap(KeycloakTransformFactory::new())
-            // .wrap(SessionMiddleware::builder(CookieSessionStore::default(), Key::from(&[0; 64]))
-            //     .cookie_secure(false)
-            //     // customize session and cookie expiration
-            //     .session_lifecycle(
-            //         PersistentSession::default().session_ttl(cookie::time::Duration::hours(2)),
-            //     ))
-            .service( controllers::alerts_controller::create_alert)
-    })
+            .app_data(app_data.clone())
+            .configure(config)
+            .service(healthcheck)
+            .default_service(web::route().to(not_found))
+            .wrap(actix_web::middleware::Logger::default())
+    )
         .bind(("127.0.0.1", 8081))?
         .run()
         .await

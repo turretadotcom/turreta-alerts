@@ -1,15 +1,20 @@
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
 use crate::controllers::alerts_dtos::{CreateAlertRequest, CreateAlertResponse};
+use crate::models::alert::Alert;
+use crate::repository;
+use crate::repository::database::Database;
 
 
 #[post("/alerts")]
-pub async fn create_alert(request_payload: web::Json<CreateAlertRequest>) -> impl Responder {
+pub async fn create_alert(db: web::Data<Database>, request_payload: web::Json<Alert>) -> impl Responder {
 
-    let response = &CreateAlertResponse {
-        status: "Create alert".to_string(),
-    };
+    let todo = db.create_alert(request_payload.into_inner());
+    // match todo {
+    //     Ok(todo) => HttpResponse::Ok().json(todo),
+    //     Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    // }
 
-    HttpResponse::Ok().json(response)
+    HttpResponse::Ok().json(todo.unwrap())
 }
 
 
@@ -56,4 +61,17 @@ async fn get_alert(uuid: web::Path<String>) -> &'static str {
     // println!("{:?}",o.un);
 
     "find alert by id"
+}
+
+
+
+pub fn config(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        web::scope("/api")
+            .service(create_alert)
+            // .service(get_todo_by_id)
+            // .service(get_todos)
+            // .service(delete_todo_by_id)
+            // .service(update_todo_by_id)
+    );
 }

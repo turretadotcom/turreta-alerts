@@ -5,9 +5,10 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.3.1"
+dotenv = "0.15.0"
 diesel = { version = "2.0.0", features = ["postgres", "r2d2", "chrono", "uuid"] }
-dotenvy = "0.15"
 serde = { version = "1.0", features = ["derive"] }
 futures-util = "0.3.28"
 actix-session = { version = "0.7.2", features = ["cookie-session"] }
 turreta-rust-keycloak = { version = "1.0.0", git = "https://github.com/turretadotcom/turreta-rust-keycloak", branch="master" }
+chrono = { version = "0.4.24", features = ["serde"] }
