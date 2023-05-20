@@ -1,6 +1,7 @@
 mod controllers;
 mod repository;
-mod models;
+mod domains;
+mod services;
 
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
 use serde::{Deserialize, Serialize};
@@ -49,10 +50,14 @@ async fn main() -> std::io::Result<()> {
     let alerts_db = repository::database::Database::new();
     let app_data = web::Data::new(alerts_db);
 
+    let alerts_service = services::alert_service::AlertService::new();
+    let app_alerts_service = web::Data::new(alerts_service);
+
 
     HttpServer::new(move ||
         App::new()
             .app_data(app_data.clone())
+            .app_data(app_alerts_service.clone())
             .configure(config)
             .service(healthcheck)
             .default_service(web::route().to(not_found))

@@ -6,6 +6,8 @@ use diesel::sql_types::BigInt;
 #[diesel(primary_key(id))]
 #[diesel(table_name = crate::repository::schema::alerts)]
 pub struct Alert {
+
+    ///
     pub id: Option<i32>,
     pub source: String,
     pub source_component: String,

@@ -1,14 +1,15 @@
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
 use crate::controllers::alerts_dtos::{CreateAlertRequest, CreateAlertResponse};
-use crate::models::alert::Alert;
+use crate::domains::alert::Alert;
 use crate::repository;
 use crate::repository::database::Database;
+use crate::services::alert_service::AlertService;
 
 
 #[post("/alerts")]
-pub async fn create_alert(db: web::Data<Database>, request_payload: web::Json<Alert>) -> impl Responder {
+pub async fn create_alert(service: web::Data<AlertService>, db: web::Data<Database>, request_payload: web::Json<Alert>) -> impl Responder {
 
-    let todo = db.create_alert(request_payload.into_inner());
+    let todo = service.create_alert(&db, request_payload.into_inner());
     // match todo {
     //     Ok(todo) => HttpResponse::Ok().json(todo),
     //     Err(err) => HttpResponse::InternalServerError().body(err.to_string()),

@@ -4,13 +4,13 @@ use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
 
-use crate::models::alert::Alert;
+use crate::domains::alert::Alert;
 use crate::repository::schema::alerts::dsl::*;
 
 type DBPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 pub struct Database {
-    pool: DBPool,
+    pub pool: DBPool
 }
 
 impl Database {
@@ -24,12 +24,6 @@ impl Database {
             .expect("Failed to create pool.");
         Database { pool }
     }
-
-    // pub fn get_alerts(&self) -> Vec<Todo> {
-    //     todos
-    //         .load::<Todo>(&mut self.pool.get().unwrap())
-    //         .expect("Error loading all todos")
-    // }
 
     pub fn create_alert(&self, alert: Alert) -> Result<Alert, Error> {
         let new_alert = Alert {
@@ -48,7 +42,7 @@ impl Database {
         diesel::insert_into(alerts)
             .values(&new_alert)
             .execute(&mut self.pool.get().unwrap())
-            .expect("Error creating new todo");
+            .expect("Error creating new alert");
         Ok(new_alert)
     }
 
