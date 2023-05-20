@@ -1,6 +1,6 @@
 mod controllers;
 
-
+use indradb;
 use dotenvy::{dotenv};
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
 use serde::{Deserialize, Serialize};
@@ -17,6 +17,8 @@ use actix_web::{
     Error,
 };
 use actix_web::cookie::Key;
+use turreta_rust_keycloak::abra;
+use turreta_rust_keycloak::abra::keycloak_commons::KeycloakOpenIdConnectClientContext;
 
 // use turreta_rust_keycloak::abra::keycloak::KeycloakClientContext;
 
@@ -115,6 +117,18 @@ impl<S, B> Service<ServiceRequest> for KeycloakMiddleware<S>
 
         let fut = self.service.call(req);
 
+
+        KeycloakOpenIdConnectClientContext::new(String::from("my-realm"),
+                                                String::from("kc-16.1.1"),
+                                                String::from("kc-16.1.1-client-confidential"));
+        let auth_token = abra::keycloak_openid_service::KeycloakOpenIdConnectService::authenticate(
+            "http://localhost:8280/auth/",
+            "kc-16.1.1-user-1",
+            "password123",
+            &context);
+
+        let result = auth_token.await;
+
         Box::pin(async move {
             let res = fut.await?;
 
@@ -126,6 +140,8 @@ impl<S, B> Service<ServiceRequest> for KeycloakMiddleware<S>
 
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
+
+
     HttpServer::new(|| {
         App::new()
             .wrap(KeycloakTransformFactory::new())

@@ -1,6 +1,6 @@
 version: "2.3"
 services:
-  keycloak-container:
+  turreta-alerts-keycloak-container:
     image: jboss/keycloak:16.1.1
     command: 
       # -Djboss.socket.binding.port-offset=200
@@ -12,7 +12,22 @@ services:
       - 8080:8080
       # - 8280:8280
     networks:
-      - turreta_network    
+      - turreta_alerts_network
+
+  turreta-alerts-db:
+    image: postgres:alpine3.18
+    environment:
+      POSTGRES_USER: alerts
+      POSTGRES_PASSWORD: c164b820-add5-494c-a10a-297333ad92bb
+    volumes:
+      - turreta-alerts-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - turreta_alerts_network      
+volumes:
+  turreta-alerts-postgres-data:
+  
 networks:
-  turreta_network:
+  turreta_alerts_network:
     driver: bridge
