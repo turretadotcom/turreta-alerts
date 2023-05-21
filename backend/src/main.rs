@@ -2,6 +2,7 @@ mod controllers;
 mod repository;
 mod domains;
 mod services;
+mod middlewares;
 
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
 use serde::{Deserialize, Serialize};
@@ -21,6 +22,7 @@ use actix_web::cookie::Key;
 use turreta_rust_keycloak::abra;
 use turreta_rust_keycloak::abra::keycloak_commons::KeycloakOpenIdConnectClientContext;
 use crate::controllers::alerts_controller::{config, create_alert};
+use crate::middlewares::preprocessor::KeycloakPreAuth;
 
 #[get("/health")]
 async fn healthcheck() -> impl Responder {
@@ -56,6 +58,8 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move ||
         App::new()
+            .wrap(KeycloakPreAuth {})
+
             .app_data(app_data.clone())
             .app_data(app_alerts_service.clone())
             .configure(config)
