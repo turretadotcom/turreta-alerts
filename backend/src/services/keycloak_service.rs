@@ -1,4 +1,5 @@
-use turreta_rust_keycloak::abra::keycloak_commons::{KeycloakOpenIdConnectClientContext, OpenIdAuthenticateResponse};
+use futures_util::FutureExt;
+use turreta_rust_keycloak::abra::keycloak_commons::{KeycloakOpenIdConnectClientContext, OpenIdAuthenticateResponse, OpenIdIssuerResponse, OpenIdUserInfoResponse};
 use reqwest::Error;
 use turreta_rust_keycloak::abra;
 
@@ -33,5 +34,18 @@ impl KeyCloakService {
 
         let result = auth_token.await;
         result
+    }
+
+    pub async fn get_issue_details(base_url: &str, context: &KeycloakOpenIdConnectClientContext) -> Result<OpenIdIssuerResponse, Error> {
+
+        abra::keycloak_openid_service::KeycloakOpenIdConnectService::get_issuer_details(
+            base_url,
+            context).await
+    }
+
+    pub async fn get_issue_details2() -> String {
+
+        "".to_owned()
+
     }
 }

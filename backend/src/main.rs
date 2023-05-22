@@ -61,7 +61,19 @@ eQIDAQAB
 #[actix_web::main] // or #[tokio::main]
 async fn main() -> std::io::Result<()> {
 
-    // let alerts_db = repository::database::Database::new();
+    let alerts_db = repository::database::Database::new();
+    let context = KeycloakOpenIdConnectClientContext::new("turreta-alerts".parse().unwrap(),
+                                                          "turreta-alerts-confidential-client".to_string(),
+                                                          "UqhfnkgfzWqdgUsJNqZqdUAXF3EJGpTu".to_string());
+    let keycloak_service = services::keycloak_service::KeyCloakService::new();
+
+    // We try to retrieve the public key
+    let string = KeyCloakService::get_issue_details("http://localhost:8080/auth/", &context).await;
+
+
+    println!("String {}", string.unwrap().realm);
+
+
     // let app_data = web::Data::new(alerts_db);
     //
     // let alerts_service = services::alert_service::AlertService::new();
