@@ -10,7 +10,8 @@ diesel = { version = "2.0.0", features = ["postgres", "r2d2", "chrono", "uuid"] 
 serde = { version = "1.0", features = ["derive"] }
 futures-util = "0.3.28"
 actix-session = { version = "0.7.2", features = ["cookie-session"] }
-turreta-rust-keycloak = { version = "1.0.0", git = "https://github.com/turretadotcom/turreta-rust-keycloak", branch="master" }
+turreta-rust-keycloak = { version = "1.0.1", git = "https://github.com/turretadotcom/turreta-rust-keycloak", branch="master" }
+#turreta-rust-keycloak = { git = "https://github.com/turretadotcom/turreta-rust-keycloak.git", rev="a2d7390" }
 actix-web-middleware-keycloak-auth = "0.4.0"
 chrono = { version = "0.4.24", features = ["serde"] }
 reqwest = { version = "0.11.17", features = ["json"] }

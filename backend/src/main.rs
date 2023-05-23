@@ -62,16 +62,20 @@ eQIDAQAB
 async fn main() -> std::io::Result<()> {
 
     let alerts_db = repository::database::Database::new();
-    let context = KeycloakOpenIdConnectClientContext::new("turreta-alerts".parse().unwrap(),
-                                                          "turreta-alerts-confidential-client".to_string(),
-                                                          "UqhfnkgfzWqdgUsJNqZqdUAXF3EJGpTu".to_string());
+    let context = KeycloakOpenIdConnectClientContext::new(
+        "http://localhost:8080/auth/".to_string(),
+        "turreta-alerts".parse().unwrap(),
+        "turreta-alerts-confidential-client".to_string(),
+        "UqhfnkgfzWqdgUsJNqZqdUAXF3EJGpTu".to_string(),
+        Option::None
+    );
     let keycloak_service = services::keycloak_service::KeyCloakService::new();
 
     // We try to retrieve the public key
-    let string = KeyCloakService::get_issue_details("http://localhost:8080/auth/", &context).await;
+    let string = KeyCloakService::get_issue_details(&context).await;
 
 
-    println!("String {}", string.unwrap().realm);
+    println!("String {}", string.unwrap().public_key);
 
 
     // let app_data = web::Data::new(alerts_db);

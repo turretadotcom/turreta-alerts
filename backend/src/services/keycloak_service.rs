@@ -15,17 +15,18 @@ impl KeyCloakService {
 
         KeyCloakService {
             context: KeycloakOpenIdConnectClientContext::new(
+                "http://localhost:8080/auth".to_string(),
                 "turreta-alerts".parse().unwrap(),
                 "turreta-alerts-confidential-client".to_string(),
-                "UqhfnkgfzWqdgUsJNqZqdUAXF3EJGpTu".to_string()
+                "UqhfnkgfzWqdgUsJNqZqdUAXF3EJGpTu".to_string(),
+                Option::None
             )
         }
     }
 
-    pub async fn  authentication_and_get_token(base_url: &str, username: &str, password: &str, context: &KeycloakOpenIdConnectClientContext) -> Result<OpenIdAuthenticateResponse, Error> {
+    pub async fn  authentication_and_get_token(username: &str, password: &str, context: &KeycloakOpenIdConnectClientContext) -> Result<OpenIdAuthenticateResponse, Error> {
         println!("DSDSDS");
         let auth_token = abra::keycloak_openid_service::KeycloakOpenIdConnectService::authenticate(
-            base_url,
             username,
             password,
             context);
@@ -36,10 +37,9 @@ impl KeyCloakService {
         result
     }
 
-    pub async fn get_issue_details(base_url: &str, context: &KeycloakOpenIdConnectClientContext) -> Result<OpenIdIssuerResponse, Error> {
+    pub async fn get_issue_details(context: &KeycloakOpenIdConnectClientContext) -> Result<OpenIdIssuerResponse, Error> {
 
         abra::keycloak_openid_service::KeycloakOpenIdConnectService::get_issuer_details(
-            base_url,
             context).await
     }
 
