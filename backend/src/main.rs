@@ -81,7 +81,6 @@ async fn main() -> std::io::Result<()> {
         keycloak_client_secret.clone(),
         Option::None
     );
-    let keycloak_service = services::keycloak_service::KeyCloakService::new();
 
     // We try to retrieve the public key
     let string = KeyCloakService::get_issue_details(&context).await;
@@ -91,12 +90,18 @@ async fn main() -> std::io::Result<()> {
     let pp = public_key_normalize_format(string.unwrap().public_key.clone());
     // println!("String {}", &pp);
 
-    std::env::set_var("RUST_LOG", "info,actix_web_middleware_keycloak_auth=trace");
+    std::env::set_var("RUST_LOG", "info,actix_web=trace");
     env_logger::init();
 
+    let app_data = web::Data::new(alerts_db);
 
+    let alerts_service = services::alert_service::AlertService::new();
+    let app_alerts_service = web::Data::new(alerts_service);
 
-    HttpServer::new(|| {
+    let keycloak_service = services::keycloak_service::KeyCloakService::new();
+    let app_keycloak_service = web::Data::new(keycloak_service);
+
+    HttpServer::new(move || {
         let keycloak_auth = KeycloakAuth::default_with_pk(
             DecodingKey::from_rsa_pem(&pp.clone().to_owned().as_bytes()).unwrap(),
         );
@@ -104,9 +109,12 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(middleware::Logger::default())
             .service(
-                web::scope("/private")
-                    .wrap(keycloak_auth)
-                    .route("", web::get().to(private)),
+            web::scope("/api")
+                .wrap(keycloak_auth)
+                        .app_data(app_data.clone())
+                        .app_data(app_alerts_service.clone())
+                        .app_data(app_keycloak_service.clone())
+                .service(create_alert)
             )
             .service(web::resource("/").to(hello_world))
     })

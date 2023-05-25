@@ -1,4 +1,5 @@
 use actix_web::{get, post, web, App, HttpServer, Result, Responder, HttpResponse, cookie};
+use chrono::Utc;
 use crate::controllers::alerts_dtos::{CreateAlertRequest, CreateAlertResponse};
 use crate::domains::alert::Alert;
 use crate::repository;
@@ -7,14 +8,35 @@ use crate::services::alert_service::AlertService;
 
 
 #[post("/alerts")]
-pub async fn create_alert(service: web::Data<AlertService>, db: web::Data<Database>, request_payload: web::Json<Alert>) -> impl Responder {
-    let todo = service.create_alert(&db, request_payload.into_inner());
+pub async fn create_alert<>(service: web::Data<AlertService>,
+                            db: web::Data<Database>,
+                            request_payload: web::Json<CreateAlertRequest>) -> impl Responder {
+
+    let create_alert_request_dto = request_payload.into_inner();
+    //
+    // // println!("cccc {:?}", &claims);
+
+    let new_alert = Alert {
+        id: Option::None,
+        source: create_alert_request_dto.source,
+        source_component: create_alert_request_dto.source_component,
+        description: Option::Some(create_alert_request_dto.alert_description),
+        alert_type: create_alert_request_dto.alert_type,
+        subject_type: create_alert_request_dto.alert_subject_type,
+        subject_reference_number: create_alert_request_dto.alert_subject_reference_number,
+        subject_description: Option::Some(create_alert_request_dto.alert_subject_description),
+        content: create_alert_request_dto.alert_content,
+        created_at: Option::Some(Utc::now().naive_utc()),
+        updated_at: Option::Some(Utc::now().naive_utc())
+    };
+
+    let todo = service.create_alert(&db, new_alert);
     // match todo {
     //     Ok(todo) => HttpResponse::Ok().json(todo),
     //     Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     // }
 
-    HttpResponse::Ok().json(todo.unwrap())
+    HttpResponse::Ok().json("")
 }
 
 
